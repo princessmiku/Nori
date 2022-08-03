@@ -1,0 +1,2 @@
+# Nori
+Discord FAQ Bot
