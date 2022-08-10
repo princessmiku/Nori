@@ -10,6 +10,7 @@ from etc.permission import isAdmin, isCreator, isModerator
 from etc.embed.permission import invalidPermissions
 from etc.embed.inputEmbed import botMentionNotAllowed
 from etc.sql import connection
+from etc.search import sc
 
 
 class Editor(Group):
@@ -84,6 +85,14 @@ class Editor(Group):
             await interaction.response.send_message(embed=invalidPermissions(), ephemeral=True)
             return
         await interaction.response.send_message("slash in development", ephemeral=True)
+
+    @command(name="recreate", description="recreate the internal search index")
+    async def recreate(self, interaction: Interaction):
+        if not isModerator(interaction.user.id):
+            await interaction.response.send_message(embed=invalidPermissions(), ephemeral=True)
+            return
+        await interaction.response.send_message("index will recreate", ephemeral=True)
+        sc.recreateIndex()
 
 
 client.tree.add_command(Editor())
