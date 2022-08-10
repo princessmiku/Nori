@@ -31,6 +31,7 @@ class BotClient(Client):
     async def setup_hook(self) -> None:
         self.tree.copy_global_to(guild=self.bot_guild)
         #await self.tree.sync(guild=self.bot_guild)
+        #await self.tree.sync()
 
 
 client = BotClient(intents=Intents.default())
