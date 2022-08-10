@@ -9,6 +9,5 @@ from etc.language import lang
 @choices(language=[Choice(name=x, value=int(lang[x])) for x in lang])
 async def suggestion(interaction: Interaction, language: Choice[int]):
     response: InteractionResponse = interaction.response
-    print(language)
-    sugModel = Suggestion(str(language.value))
+    sugModel = Suggestion(lang[language.name])
     await response.send_modal(sugModel)

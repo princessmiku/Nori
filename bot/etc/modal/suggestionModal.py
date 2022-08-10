@@ -3,25 +3,24 @@ from discord.ui import Modal, TextInput, Select
 from discord.ui.select import SelectOption
 from ..sql import connection
 from ..language import lang
+from ..suggestion import create
 
 
 class Suggestion(Modal, title="Suggestion"):
-    about = TextInput(
-        label="About",
-        style=TextStyle.long,
-        default="Information about this modal.\n"
-                "Here you can suggest an entry in the Q&A\n"
-                "Only entries that conform to the rules are allowed, use the slash provided for this (in progress).",
-                #"\n\nLanguage | The Default language is english or the selected language in the slash option"
-        required=False
-    )
+    #about = TextInput(
+    #    label="About",
+    #    style=TextStyle.long,
+    #    default="Information about this modal.\n"
+    #            "Here you can suggest an entry in the Q&A\n"
+    #            "Only entries that conform to the rules are allowed, use the slash provided for this (in progress).",
+    #    required=False
+    #)
     question = TextInput(
         label="Question",
         placeholder="Question of the faq",
         min_length=5,
         max_length=300,
-        required=True,
-        row=2
+        required=True
     )
     answer = TextInput(
         label="What is the answer to the question?",
@@ -29,8 +28,7 @@ class Suggestion(Modal, title="Suggestion"):
         placeholder='Write here your text or the url',
         min_length=10,
         max_length=1500,
-        required=True,
-        row=3
+        required=True
     )
     source = TextInput(
         label="Source",
@@ -38,35 +36,35 @@ class Suggestion(Modal, title="Suggestion"):
         placeholder="list your sources here, if available",
         required=False,
         min_length=15,
-        max_length=1500,
-        row=4
+        max_length=1500
+    )
+    tags = TextInput(
+        label="Tags",
+        style=TextStyle.long,
+        placeholder="search tags, separate with ','",
+        required=False,
+        max_length=100
     )
 
     def __init__(self, language: str = "1"):
-        super().__init__()
-        #options = [SelectOption(label=x, value=str(lang[x])) for x in lang.keys()]
-        self.timeout = 360
-        #self.sel = Select(
-        #    options=options,
-        #    row=1,
-        #    placeholder="Language",
-        #    max_values=1,
-        #    min_values=0
-        #)
         self.language = language
-#
-        #self.add_item(self.sel)
+        super().__init__()
+        self.timeout = 360
 
     async def on_submit(self, interaction: Interaction) -> None:
-        connection.table("qaa").insert()\
-            .set("author_id", interaction.user.id)\
-            .set("question", self.question.value)\
-            .set("answer", self.answer.value)\
-            .set("source", self.source.value)\
-            .set("language", self.language)\
-            .execute()
+        create.add(
+            interaction.user.id,
+            self.question.value,
+            self.answer.value,
+            self.source.value,
+            self.tags.value,
+            self.language
+        )
         response: InteractionResponse = interaction.response
-        await response.send_message("Thank you for your suggestion, it will now be checked and included", ephemeral=True)
+        await response.send_message(
+            "Thank you for your suggestion, it will now be checked and included",
+            ephemeral=True
+        )
 
     async def on_error(self, interaction: Interaction, error: Exception) -> None:
-        pass
+        print(error)

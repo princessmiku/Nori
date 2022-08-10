@@ -1,5 +1,6 @@
 from etc.bot.botClient import client
 
+from etc import search
 import slash
 
 if __name__ == '__main__':
