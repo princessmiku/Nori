@@ -13,5 +13,5 @@ connection = Connect(
     host=_host,
     user="root",
     password=_password,
-    database="kaguya"
+    database="nori"
 )

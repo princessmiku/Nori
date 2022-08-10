@@ -10,7 +10,6 @@ from ..startup.generateStructure import GenerateStructure
 
 
 class BotClient(Client):
-
     checkExists = CheckExists()
     generateStructure = GenerateStructure(checkExists)
     config = ConfigParser(); config.read("./config/bot.ini")

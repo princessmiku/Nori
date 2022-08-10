@@ -1,2 +1,2 @@
 # Nori
-Discord FAQ Bot
+Discord Q&A Bot
