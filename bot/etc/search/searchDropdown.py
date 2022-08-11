@@ -1,3 +1,4 @@
+import time
 from typing import Any
 
 import discord
@@ -11,6 +12,7 @@ from ..sql import connection
 from validators import url as isUrl
 from ..search import sc
 
+_lastfeedback = {}
 
 
 class _Select(Select):
@@ -67,9 +69,15 @@ class _RightB(Button):
         self.dropdown = main_window.dropdown
 
     async def callback(self, interaction: Interaction) -> Any:
-        self.record.setResult(self.dropdown.r_options[self.dropdown.selected])
-        sc.insertRecord(self.record)
-        await interaction.response.send_message("thx")
+        if interaction.user.bot: return
+        if not _lastfeedback.__contains__(interaction.user.id) or _lastfeedback[interaction.user.id] + 30 > time.time():
+            _lastfeedback[interaction.user.id] = time.time()
+            self.record.setResult(self.dropdown.r_options[self.dropdown.selected])
+            sc.insertRecord(self.record)
+        await interaction.response.send_message(
+            "thank you for your feedback",
+            ephemeral=True
+        )
 
 
 class SearchDrop(View):
