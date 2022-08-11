@@ -16,8 +16,8 @@ class Suggestion(Modal, title="Suggestion"):
     #    required=False
     #)
     question = TextInput(
-        label="Question",
-        placeholder="Question of the faq",
+        label="Question | Title",
+        placeholder="Question of the Q&A",
         min_length=5,
         max_length=300,
         required=True

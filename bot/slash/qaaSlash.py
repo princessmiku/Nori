@@ -15,10 +15,9 @@ async def search(interaction: Interaction, text: str = None):
         await response.send_modal(SearchModal())
     else:
         record: Record = sc.match(text)
-        drec: DRec = DRec(record, 24)
-        if len(drec.get()) == 0:
+        if len(record.data) == 0:
             await response.send_message("nothing found")
             return
-        view = SearchDrop(drec)
+        view = SearchDrop(record)
         _id = view.dropdown.options[0].value
-        await response.send_message(embed=renderEmbed(_id), view=SearchDrop(drec))
+        await response.send_message(embed=renderEmbed(_id), view=SearchDrop(record))

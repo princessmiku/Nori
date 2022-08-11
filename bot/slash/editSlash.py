@@ -40,7 +40,6 @@ class Editor(Group):
         if user.id == client.owner:
             await response.send_message(embed=invalidPermissions(), ephemeral=True)
             return
-        client.wait_for('message')
         if perm == "delete":
             connection.table("users").delete().where("id", user.id).execute()
             await response.send_message(embed=discord.Embed(
