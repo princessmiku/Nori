@@ -17,6 +17,8 @@ class GenerateStructure:
         self.checkExists.checkFolderAndCreate("./config")
         self.checkExists.checkFileAndCreate("./config/token.txt", "ENTER YOUR TOKEN THERE")
         self.checkExists.checkFileAndCreate("./config/.gitignore", "*")
+        self.checkExists.checkFileAndCreate("./config/google_api_key.txt")
+        self.checkExists.checkFileAndCreate("./config/url_blacklist.txt")
         notExists: bool = self.checkExists.checkFileAndCreate("./config/bot.ini")
         if notExists:
             config = ConfigParser(); config.read(self.checkExists.getValidPath("./config/bot.ini"))

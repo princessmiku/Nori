@@ -8,27 +8,34 @@ from discord.ui.select import SelectOption
 from scientist.datahandler.dtos_S2Data import Collection
 from scientist.search import Record
 from scientist.search.displayRecord import DRec
+
+from ..google.result import Result
 from ..sql import connection
 from validators import url as isUrl
 from ..search import sc
+from ..google import embed_footer_text as g_embed_footer_text, logo_url as g_logo_url
 
 _lastfeedback = {}
+_tooMuchFeedback = {}
 
 
 class _Select(Select):
 
-    def __init__(self, drec: DRec, main_window):
-        options = []
-        self.r_options = {
-
-        }
+    def __init__(self, drec: DRec, main_window, gResult: Result = None):
+        options: list[SelectOption] = []
+        if gResult:
+            options.append(
+                SelectOption(label=gResult.title, emoji="🌐", value="google_search", description=gResult.description[:50])
+            )
+        self.r_options = {}
         x: Collection
         count = 0
-        for x in drec.get():
-            options.append(
-                SelectOption(label=x.name, emoji="🔎", value=x.identifier, description=', '.join(x.category)[:50]))
-            self.r_options[x.identifier] = count
-            count += 1
+        if drec is not None:
+            for x in drec.get():
+                options.append(
+                    SelectOption(label=x.name, emoji="🔎", value=x.identifier, description=', '.join(x.category)[:50]))
+                self.r_options[x.identifier] = count
+                count += 1
         self.selected = options[0].value
         super().__init__(options=options)
         self.main_window = main_window
@@ -70,50 +77,101 @@ class _RightB(Button):
 
     async def callback(self, interaction: Interaction) -> Any:
         if interaction.user.bot: return
+        if _tooMuchFeedback.__contains__(interaction.user.id) and _tooMuchFeedback[interaction.user.id] > 5:
+            await interaction.response.send_message(
+                "you are unfortunately locked due to too much feedback in too short time",
+                ephemeral=True
+            )
+            return
         if not _lastfeedback.__contains__(interaction.user.id) or _lastfeedback[interaction.user.id] + 30 > time.time():
+            try:
+                if _lastfeedback[interaction.user.id] + 30 > time.time():
+                    if not _tooMuchFeedback.__contains__(interaction.user.id):
+                        _tooMuchFeedback[interaction.user.id] = 0
+                    else:
+                        _tooMuchFeedback[interaction.user.id] += 1
+                elif _lastfeedback[interaction] + _lastfeedback[interaction.user.id] + 300 > time.time():
+                    _tooMuchFeedback.pop(interaction.user.id)
+            except KeyError:
+                pass
             _lastfeedback[interaction.user.id] = time.time()
-            self.record.setResult(self.dropdown.r_options[self.dropdown.selected])
-            sc.insertRecord(self.record)
-        await interaction.response.send_message(
-            "thank you for your feedback",
-            ephemeral=True
-        )
+            if self.dropdown.selected == "google_search":
+                pass
+            else:
+                self.record.setResult(self.dropdown.r_options[self.dropdown.selected])
+                sc.insertRecord(self.record)
+                await interaction.response.send_message(
+                    "thank you for your feedback",
+                    ephemeral=True
+                )
+        else:
+            await interaction.response.send_message(
+                "this button has a cooldown, please wait a moment and try again",
+                ephemeral=True
+            )
 
 
 class SearchDrop(View):
 
-    def __init__(self, record: Record):
+    def __init__(self, record: Record, gResult: Result):
         self.record = record
-        self.drec = record.getAsDRec(24)
-        self.dropdown = _Select(self.drec, self)
-        self.sourceB = _SourceButton(
-            connection.table("qaa")
-                .select("sources")
-                .where("id", int(self.dropdown.selected))
-                .fetchone()[0]
-        )
+        if record is None:
+            self.drec = None
+        else:
+            self.drec = record.getAsDRec(19)
+        self.gResult = gResult
+        self.dropdown = _Select(self.drec, self, gResult)
+        if gResult:
+            self.sourceB = _SourceButton(
+                gResult.url
+            )
+        elif record != None:
+            self.sourceB = _SourceButton(
+                connection.table("qaa")
+                    .select("sources")
+                    .where("id", int(self.dropdown.selected))
+                    .fetchone()[0]
+            )
         self.rightB = _RightB(self)
         super().__init__()
         self.add_item(self.dropdown)
         self.add_item(self.rightB)
-        self.add_item(self.sourceB)
+        try:
+            self.add_item(self.sourceB)
+        except:
+            pass
 
     async def render(self, interaction: Interaction):
-        data = connection.table("qaa")\
-            .select("question, answer, sources, tags")\
-            .where("id", int(self.dropdown.selected))\
-            .fetchone()
-        embed = renderEmbed(self.dropdown.selected, data)
         self.remove_item(self.sourceB)
-        self.sourceB = _SourceButton(data[2])
+        if self.dropdown.selected == "google_search":
+            embed = renderEmbed(self.dropdown.selected, self.gResult, True)
+            self.sourceB = _SourceButton(self.gResult.url)
+        else:
+            data = connection.table("qaa")\
+                .select("question, answer, sources, tags")\
+                .where("id", int(self.dropdown.selected))\
+                .fetchone()
+            embed = renderEmbed(self.dropdown.selected, data)
+            self.sourceB = _SourceButton(data[2])
         self.add_item(self.sourceB)
         await interaction.response.edit_message(embed=embed, view=self)
 
 
-def renderEmbed(identifier: str, data=None) -> Embed:
-    if data is None: data = connection.table("qaa").select("question, answer").where("id", int(identifier)).fetchone()
-    return Embed(
-        title=data[0],
-        description=data[1],
-        color=Color.teal()
-    )
+def renderEmbed(identifier: str, data=None, isGoogle: bool = False) -> Embed:
+    if isGoogle:
+        data: Result
+        return Embed(
+            title=data.title,
+            description=data.description,
+            color=0x0F71F2
+        ).set_footer(
+            text=g_embed_footer_text,
+            icon_url=g_logo_url
+        )
+    else:
+        if data is None: data = connection.table("qaa").select("question, answer").where("id", int(identifier)).fetchone()
+        return Embed(
+            title=data[0],
+            description=data[1],
+            color=Color.teal()
+        )
