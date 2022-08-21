@@ -16,7 +16,6 @@ def get_hostname(url: str) -> str:
 
 def route_function(url: str):
     hostname = get_hostname(url)
-    print(url)
     if hostname == "wikipedia":
         return wiki_search(url)
     if hostname == "wikimedia":
@@ -41,7 +40,9 @@ def search(q: str) -> Result:
     try:
         image = None
         for i in g_search(q, num=10, stop=2, pause=2, safe="on", country="de"):
-            if str(urlparse(i).hostname) in url_blacklist: continue
+            if str(urlparse(i).hostname) in url_blacklist:
+                print("blacklistet url")
+                continue
             try:
                 result: Result = route_function(i)
                 if result.image or image is None: return result
@@ -49,10 +50,15 @@ def search(q: str) -> Result:
             except HTTPError as e:
                 if e.code == 403:
                     addURL_ToBlacklist(str(urlparse(i).hostname))
+                    continue
+                else:
+                    #print(e)
+                    pass
             except Exception as e:
+                #print(e)
                 pass
-    except:
-        pass
+    except Exception as e:
+        print(e)
     return Result(
         "Rick Astley - Never Gonna Give You Up (Official Music Video)",
         "*This is an error message*\n\n"

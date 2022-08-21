@@ -25,7 +25,7 @@ async def search(interaction: Interaction, text: str):
         await response.defer(thinking=True)
         result: Result = g_search(text)
 
-    view = SearchDrop(record, result)
+    view = SearchDrop(record, result, text.lower())
     _id = view.dropdown.options[0].value
     if result:
         if response.is_done():

@@ -77,6 +77,7 @@ class _RightB(Button):
         self.record: Record = main_window.record
         self.dropdown = main_window.dropdown
         self.gResult: Result = main_window.gResult
+        self.searchText = main_window.searchText
 
     async def callback(self, interaction: Interaction) -> Any:
         if interaction.user.bot: return
@@ -103,7 +104,7 @@ class _RightB(Button):
                     self.gResult.title,
                     self.gResult.description,
                     self.gResult.url,
-                    "",
+                    self.searchText,
                     lang["german"], True,
                     self.gResult.image
                     )
@@ -128,8 +129,9 @@ class _RightB(Button):
 
 class SearchDrop(View):
 
-    def __init__(self, record: Record, gResult: Result):
+    def __init__(self, record: Record, gResult: Result, searchText: str):
         self.record = record
+        self.searchText = searchText
         if record is None:
             self.drec = None
         else:
