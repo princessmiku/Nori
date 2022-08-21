@@ -14,6 +14,8 @@ from ..sql import connection
 from validators import url as isUrl
 from ..search import sc
 from ..google import embed_footer_text as g_embed_footer_text, logo_url as g_logo_url
+from ..suggestion.create import add
+from ..language import lang
 
 _lastfeedback = {}
 _tooMuchFeedback = {}
@@ -74,6 +76,7 @@ class _RightB(Button):
         super().__init__(label="Found it", emoji="👍")
         self.record: Record = main_window.record
         self.dropdown = main_window.dropdown
+        self.gResult: Result = main_window.gResult
 
     async def callback(self, interaction: Interaction) -> Any:
         if interaction.user.bot: return
@@ -96,7 +99,19 @@ class _RightB(Button):
                 pass
             _lastfeedback[interaction.user.id] = time.time()
             if self.dropdown.selected == "google_search":
-                pass
+                add(interaction.user.id,
+                    self.gResult.title,
+                    self.gResult.description,
+                    self.gResult.url,
+                    "",
+                    lang["german"], True,
+                    self.gResult.image
+                    )
+                await interaction.response.send_message(
+                    "thank you for your feedback. The result will be added to the database",
+                    ephemeral=True
+                )
+                sc.recreateIndex()
             else:
                 self.record.setResult(self.dropdown.r_options[self.dropdown.selected])
                 sc.insertRecord(self.record)
@@ -147,12 +162,12 @@ class SearchDrop(View):
             embed = renderEmbed(self.dropdown.selected, self.gResult, True)
             self.sourceB = _SourceButton(self.gResult.url)
         else:
-            data = connection.table("qaa")\
-                .select("question, answer, sources, tags")\
+            theUrl = connection.table("qaa")\
+                .select("sources")\
                 .where("id", int(self.dropdown.selected))\
-                .fetchone()
-            embed = renderEmbed(self.dropdown.selected, data)
-            self.sourceB = _SourceButton(data[2])
+                .fetchone()[0]
+            embed = renderEmbed(self.dropdown.selected)
+            self.sourceB = _SourceButton(theUrl)
         self.add_item(self.sourceB)
         await interaction.response.edit_message(embed=embed, view=self)
 
@@ -160,7 +175,7 @@ class SearchDrop(View):
 def renderEmbed(identifier: str, data=None, isGoogle: bool = False) -> Embed:
     if isGoogle:
         data: Result
-        return Embed(
+        embed = Embed(
             title=data.title,
             description=data.description,
             color=0x0F71F2
@@ -168,10 +183,16 @@ def renderEmbed(identifier: str, data=None, isGoogle: bool = False) -> Embed:
             text=g_embed_footer_text,
             icon_url=g_logo_url
         )
+        if data.image:
+            embed.set_image(url=data.image)
+        return embed
     else:
-        if data is None: data = connection.table("qaa").select("question, answer").where("id", int(identifier)).fetchone()
-        return Embed(
+        data: list = connection.table("qaa").select("question, answer, image").where("id", int(identifier)).fetchone()
+        embed = Embed(
             title=data[0],
             description=data[1],
-            color=Color.teal()
+            color=Color.yellow()
         )
+        #if data[2]:
+        embed.set_image(url=data[2])
+        return embed

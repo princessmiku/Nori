@@ -1,5 +1,3 @@
-from etc.wikipedia.search import search
-
 from etc.bot.botClient import client
 
 from etc import search

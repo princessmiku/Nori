@@ -14,7 +14,7 @@ def search(url: str):
         image = page.images[0]
     return Result(
         title=q,
-        description=page.content,
+        description=page.content.split("=")[0].replace("\n\n", ""),
         url=page.url,
         image=image
     )
