@@ -25,7 +25,7 @@ class _Select(Select):
         options: list[SelectOption] = []
         if gResult:
             options.append(
-                SelectOption(label=gResult.title, emoji="🌐", value="google_search", description=gResult.description[:50])
+                SelectOption(label=gResult.title[:85] + "..." if len(gResult.title) > 85 else gResult.title, emoji="🌐", value="google_search", description=gResult.description[:50])
             )
         self.r_options = {}
         x: Collection
@@ -33,7 +33,7 @@ class _Select(Select):
         if drec is not None:
             for x in drec.get():
                 options.append(
-                    SelectOption(label=x.name, emoji="🔎", value=x.identifier, description=', '.join(x.category)[:50]))
+                    SelectOption(label=x.name[:85] + "..." if len(x.name) > 85 else x.name, emoji="🔎", value=x.identifier, description=', '.join(x.category)[:50]))
                 self.r_options[x.identifier] = count
                 count += 1
         self.selected = options[0].value
