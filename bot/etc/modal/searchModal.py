@@ -17,13 +17,12 @@ class SearchModal(Modal, title="Search"):
 
     async def on_submit(self, interaction: Interaction) -> None:
         record: Record = sc.match(self.searchText.value)
-        drec: DRec = DRec(record, 24)
-        if len(drec.get()) == 0:
+        if len(record.data) == 0:
             await interaction.response.send_message("nothing found")
             return
-        view = SearchDrop(drec)
+        view = SearchDrop(record)
         _id = view.dropdown.options[0].value
-        await interaction.response.send_message(embed=renderEmbed(_id), view=SearchDrop(drec))
+        await interaction.response.send_message(embed=renderEmbed(_id), view=SearchDrop(record))
 
     async def on_error(self, interaction: Interaction, error: Exception) -> None:
         print(error)
