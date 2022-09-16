@@ -87,15 +87,15 @@ class _RightB(Button):
                 ephemeral=True
             )
             return
-        if not _lastfeedback.__contains__(interaction.user.id) or _lastfeedback[interaction.user.id] + 30 > time.time():
+        if not _lastfeedback.__contains__(interaction.user.id) or [_lastfeedback[interaction.user.id] + 30 < time.time()]:
             try:
-                if _lastfeedback[interaction.user.id] + 30 > time.time():
+                if _lastfeedback[interaction] + _lastfeedback[interaction.user.id] + 300 < time.time():
+                    _tooMuchFeedback.pop(interaction.user.id)
+                else:
                     if not _tooMuchFeedback.__contains__(interaction.user.id):
                         _tooMuchFeedback[interaction.user.id] = 0
                     else:
                         _tooMuchFeedback[interaction.user.id] += 1
-                elif _lastfeedback[interaction] + _lastfeedback[interaction.user.id] + 300 > time.time():
-                    _tooMuchFeedback.pop(interaction.user.id)
             except KeyError:
                 pass
             _lastfeedback[interaction.user.id] = time.time()

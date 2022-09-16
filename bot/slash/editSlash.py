@@ -2,10 +2,8 @@ from typing import Literal
 
 import discord
 from discord import Interaction, InteractionResponse, User
-from discord.app_commands import describe, choices, Choice, Group, command
+from discord.app_commands import Group, command
 from etc.bot.botClient import client
-from etc.modal.suggestionModal import Suggestion
-from etc.language import lang
 from etc.permission import isAdmin, isCreator, isModerator
 from etc.embed.permission import invalidPermissions
 from etc.embed.inputEmbed import botMentionNotAllowed

@@ -1,11 +1,8 @@
-import discord
 from discord import Interaction, InteractionResponse
 from scientist.search import Record
-from scientist.search.displayRecord import DRec
 
 from etc.bot.botClient import client
 from etc.google.result import Result
-from etc.modal.searchModal import SearchModal
 from etc.search import sc
 from etc.search.searchDropdown import SearchDrop, renderEmbed
 from etc.google.search import search as g_search
@@ -17,8 +14,8 @@ async def search(interaction: Interaction, text: str):
     result: Result = None
     record = None
     try:
-        record: Record = sc.match(text)
-        if len(record.data) == 0 or record.highestRevel < 2.5:
+        record: Record = sc.match(text, needCount=1.2)
+        if len(record.data) == 0 or record.highestRevel < 2.0:
             await response.defer(thinking=True)
             result: Result = g_search(text)
     except ValueError:
